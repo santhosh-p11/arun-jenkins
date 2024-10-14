@@ -1,0 +1,49 @@
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: my-docker-secret
+  namespace: default
+type: kubernetes.io/dockerconfigjson
+data:
+  .dockerconfigjson: ewoJImF1dGhzIjogewoJCSJodHRwczovL2luZGV4LmRvY2tlci5pby92MS8iOiB7CgkJCSJhdXRoIjogIllYSjFibUZuY21rd016cGtZMnR5WDNCaGRGOURPRVpRZERobldrRnplbVIyUm1Ga1QxRlRYMU5tVlMweU1Waz0iCgkJfQoJfQp9
+
+
+
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: simple-java-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: simple-java-app
+  template:
+    metadata:
+      labels:
+        app: simple-java-app
+    spec:
+      imagePullSecrets:
+      - name: my-docker-secret
+      containers:
+      - name: simple-java-app
+        image: docker.io/arunagri03/jenkins
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: simple-java-app
+spec:
+  type: LoadBalancer # or ClusterIP, NodePort depending on your needs
+  ports:
+  - port: 80 # The port that the service will expose
+    targetPort: 8080 # The port on the container
+  selector:
+    app: simple-java-app
